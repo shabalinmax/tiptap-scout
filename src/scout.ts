@@ -4,11 +4,14 @@ import { DecorationSet } from '@tiptap/pm/view'
 import type { ScoutOptions, ScoutStorage } from './types'
 import { findMatches } from './search'
 import { createDecorations } from './decoration'
+import { scrollToResult } from './scroll'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     scout: {
       find: (searchTerm: string) => ReturnType
+      findNext: () => ReturnType
+      findPrevious: () => ReturnType
       clearSearch: () => ReturnType
     }
   }
@@ -23,6 +26,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
     return {
       searchResultClass: 'scout-result',
       currentResultClass: 'scout-result-current',
+      scrollIntoView: false,
     }
   },
 
@@ -44,6 +48,42 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
           this.storage.currentIndex = 0
 
           editor.view.dispatch(editor.state.tr)
+
+          if (this.options.scrollIntoView && this.storage.results.length > 0) {
+            scrollToResult(editor, this.storage.results[0])
+          }
+
+          return true
+        },
+
+      findNext:
+        () =>
+        ({ editor }) => {
+          const { results } = this.storage
+          if (results.length === 0) return false
+
+          this.storage.currentIndex = (this.storage.currentIndex + 1) % results.length
+          editor.view.dispatch(editor.state.tr)
+
+          if (this.options.scrollIntoView) {
+            scrollToResult(editor, results[this.storage.currentIndex])
+          }
+
+          return true
+        },
+
+      findPrevious:
+        () =>
+        ({ editor }) => {
+          const { results } = this.storage
+          if (results.length === 0) return false
+
+          this.storage.currentIndex = (this.storage.currentIndex - 1 + results.length) % results.length
+          editor.view.dispatch(editor.state.tr)
+
+          if (this.options.scrollIntoView) {
+            scrollToResult(editor, results[this.storage.currentIndex])
+          }
 
           return true
         },

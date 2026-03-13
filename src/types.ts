@@ -1,6 +1,7 @@
 export interface ScoutOptions {
   searchResultClass: string
   currentResultClass: string
+  scrollIntoView: boolean
 }
 
 export interface ScoutStorage {

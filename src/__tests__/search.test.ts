@@ -1,15 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { Editor } from '@tiptap/core'
-import StarterKit from '@tiptap/starter-kit'
-import { Scout } from '../scout'
 import { findMatches } from '../search'
-
-function createEditor(content: string) {
-  return new Editor({
-    extensions: [StarterKit, Scout],
-    content,
-  })
-}
+import { createEditor } from './helpers'
 
 let editor: Editor
 

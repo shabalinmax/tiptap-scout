@@ -11,8 +11,10 @@ Existing alternatives are outdated and built for Tiptap 2. This package is desig
 - Case-insensitive text search
 - Search works correctly across inline marks (bold, italic, links, etc.)
 - Match highlighting via ProseMirror Decorations
+- `findNext` / `findPrevious` with cyclic navigation
+- Optional scroll into view on navigation
+- Counter "N of M" via `editor.storage.scout`
 - Customizable CSS classes — no styles imposed
-- State available via `editor.storage.scout`
 - Full TypeScript support with command autocompletion
 
 ## Installation
@@ -47,11 +49,16 @@ const editor = new Editor({
 // Search
 editor.commands.find('hello')
 
+// Navigate between matches
+editor.commands.findNext()
+editor.commands.findPrevious()
+
 // Clear search
 editor.commands.clearSearch()
 
-// Access state
+// Access state (e.g. to display "2 of 5")
 const { searchTerm, results, currentIndex } = editor.storage.scout
+console.log(`${currentIndex + 1} of ${results.length}`)
 ```
 
 ### CSS
@@ -74,12 +81,15 @@ The extension does not include any styles. Add your own:
 | --- | --- | --- | --- |
 | `searchResultClass` | `string` | `'scout-result'` | CSS class for all matches |
 | `currentResultClass` | `string` | `'scout-result-current'` | CSS class for the current match |
+| `scrollIntoView` | `boolean` | `false` | Scroll to the current match on navigation |
 
 ## Commands
 
 | Command | Parameters | Description |
 | --- | --- | --- |
 | `find` | `searchTerm: string` | Search for text (case-insensitive) |
+| `findNext` | — | Navigate to the next match (cyclic) |
+| `findPrevious` | — | Navigate to the previous match (cyclic) |
 | `clearSearch` | — | Clear search results and decorations |
 
 ## Storage (`editor.storage.scout`)
@@ -92,7 +102,6 @@ The extension does not include any styles. Add your own:
 
 ## Roadmap
 
-- `findNext` / `findPrevious` commands with cyclic navigation
 - `replace` / `replaceAll` commands
 - Case-sensitive, whole word, and regex search modes
 - Live update on document changes
