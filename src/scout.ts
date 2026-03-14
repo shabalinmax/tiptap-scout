@@ -15,6 +15,10 @@ declare module '@tiptap/core' {
       clearSearch: () => ReturnType
     }
   }
+
+  interface Storage {
+    scout: ScoutStorage
+  }
 }
 
 export const scoutPluginKey = new PluginKey('scout')
