@@ -4,7 +4,7 @@ Search and replace extension for [Tiptap 3](https://tiptap.dev/).
 
 Existing alternatives are outdated and built for Tiptap 2. This package is designed for Tiptap 3 from the ground up.
 
-[README на русском](./README.ru.md)
+[README on Russian](./README.ru.md)
 
 ## Features
 
@@ -12,9 +12,12 @@ Existing alternatives are outdated and built for Tiptap 2. This package is desig
 - Search works correctly across inline marks (bold, italic, links, etc.)
 - Match highlighting via ProseMirror Decorations
 - `findNext` / `findPrevious` with cyclic navigation
+- `replace` / `replaceAll` with proper undo/redo support
 - Optional scroll into view on navigation
+- Live update — automatic re-search on document changes
 - Counter "N of M" via `editor.storage.scout`
 - Customizable CSS classes — no styles imposed
+- React hook `useScout` for reactive state
 - Full TypeScript support with command autocompletion
 
 ## Installation
@@ -42,6 +45,8 @@ const editor = new Editor({
     Scout.configure({
       searchResultClass: 'search-highlight',
       currentResultClass: 'search-highlight-current',
+      scrollIntoView: true,
+      liveUpdate: true,
     }),
   ],
 })
@@ -52,6 +57,10 @@ editor.commands.find('hello')
 // Navigate between matches
 editor.commands.findNext()
 editor.commands.findPrevious()
+
+// Replace
+editor.commands.replace('world')
+editor.commands.replaceAll('world')
 
 // Clear search
 editor.commands.clearSearch()
@@ -75,6 +84,42 @@ The extension does not include any styles. Add your own:
 }
 ```
 
+## React
+
+```tsx
+import { Scout } from '@shabalinmax/tiptap-scout'
+import { useScout } from '@shabalinmax/tiptap-scout/react'
+
+function SearchBar({ editor }) {
+  const {
+    results,
+    currentIndex,
+    totalCount,
+    find,
+    findNext,
+    findPrevious,
+    replace,
+    replaceAll,
+    clearSearch,
+  } = useScout(editor)
+
+  return (
+    <div>
+      <input onChange={(e) => find(e.target.value)} />
+      <span>{totalCount > 0 ? `${currentIndex + 1} of ${totalCount}` : 'No results'}</span>
+      <button onClick={findPrevious}>Prev</button>
+      <button onClick={findNext}>Next</button>
+      <input id="replace" />
+      <button onClick={() => replace(document.getElementById('replace').value)}>Replace</button>
+      <button onClick={() => replaceAll(document.getElementById('replace').value)}>Replace All</button>
+      <button onClick={clearSearch}>Clear</button>
+    </div>
+  )
+}
+```
+
+React is an optional peer dependency — it won't be required for non-React projects.
+
 ## Options
 
 | Option | Type | Default | Description |
@@ -82,6 +127,7 @@ The extension does not include any styles. Add your own:
 | `searchResultClass` | `string` | `'scout-result'` | CSS class for all matches |
 | `currentResultClass` | `string` | `'scout-result-current'` | CSS class for the current match |
 | `scrollIntoView` | `boolean` | `false` | Scroll to the current match on navigation |
+| `liveUpdate` | `boolean` | `false` | Re-search automatically when the document changes |
 
 ## Commands
 
@@ -90,6 +136,8 @@ The extension does not include any styles. Add your own:
 | `find` | `searchTerm: string` | Search for text (case-insensitive) |
 | `findNext` | — | Navigate to the next match (cyclic) |
 | `findPrevious` | — | Navigate to the previous match (cyclic) |
+| `replace` | `replaceWith: string` | Replace the current match |
+| `replaceAll` | `replaceWith: string` | Replace all matches (single undo step) |
 | `clearSearch` | — | Clear search results and decorations |
 
 ## Storage (`editor.storage.scout`)
@@ -98,13 +146,14 @@ The extension does not include any styles. Add your own:
 | --- | --- | --- |
 | `searchTerm` | `string` | Current search term |
 | `results` | `SearchResult[]` | Array of `{ from, to }` positions |
-| `currentIndex` | `number` | Index of the current match |
+| `currentIndex` | `number` | Index of the current match (zero-based) |
 
 ## Roadmap
 
-- `replace` / `replaceAll` commands
 - Case-sensitive, whole word, and regex search modes
-- Live update on document changes
+- Capture groups ($1, $2) in replacement string
+- Search/replace within selection
+- Preserve case on replace (Foo→Bar, foo→bar, FOO→BAR)
 
 ## License
 

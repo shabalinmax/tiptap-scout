@@ -2,6 +2,7 @@ export interface ScoutOptions {
   searchResultClass: string
   currentResultClass: string
   scrollIntoView: boolean
+  liveUpdate: boolean
 }
 
 export interface ScoutStorage {

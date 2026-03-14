@@ -12,6 +12,8 @@ declare module '@tiptap/core' {
       find: (searchTerm: string) => ReturnType
       findNext: () => ReturnType
       findPrevious: () => ReturnType
+      replace: (replaceWith: string) => ReturnType
+      replaceAll: (replaceWith: string) => ReturnType
       clearSearch: () => ReturnType
     }
   }
@@ -31,6 +33,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
       searchResultClass: 'scout-result',
       currentResultClass: 'scout-result-current',
       scrollIntoView: false,
+      liveUpdate: false,
     }
   },
 
@@ -46,12 +49,10 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
     return {
       find:
         (searchTerm: string) =>
-        ({ editor }) => {
+        ({ editor, tr }) => {
           this.storage.searchTerm = searchTerm
           this.storage.results = findMatches(editor.state.doc, searchTerm)
           this.storage.currentIndex = 0
-
-          editor.view.dispatch(editor.state.tr)
 
           if (this.options.scrollIntoView && this.storage.results.length > 0) {
             scrollToResult(editor, this.storage.results[0])
@@ -62,12 +63,11 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
 
       findNext:
         () =>
-        ({ editor }) => {
+        ({ editor, tr }) => {
           const { results } = this.storage
           if (results.length === 0) return false
 
           this.storage.currentIndex = (this.storage.currentIndex + 1) % results.length
-          editor.view.dispatch(editor.state.tr)
 
           if (this.options.scrollIntoView) {
             scrollToResult(editor, results[this.storage.currentIndex])
@@ -78,12 +78,11 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
 
       findPrevious:
         () =>
-        ({ editor }) => {
+        ({ editor, tr }) => {
           const { results } = this.storage
           if (results.length === 0) return false
 
           this.storage.currentIndex = (this.storage.currentIndex - 1 + results.length) % results.length
-          editor.view.dispatch(editor.state.tr)
 
           if (this.options.scrollIntoView) {
             scrollToResult(editor, results[this.storage.currentIndex])
@@ -92,14 +91,54 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
           return true
         },
 
-      clearSearch:
-        () =>
-        ({ editor }) => {
+      replace:
+        (replaceWith: string) =>
+        ({ editor, tr }) => {
+          const { results, currentIndex, searchTerm } = this.storage
+          if (results.length === 0) return false
+
+          const { from, to } = results[currentIndex]
+          tr.insertText(replaceWith, from, to)
+
+          // Re-search in the doc after applying the replacement
+          const newDoc = tr.doc
+          const newResults = findMatches(newDoc, searchTerm)
+          this.storage.results = newResults
+
+          if (newResults.length === 0) {
+            this.storage.searchTerm = ''
+            this.storage.currentIndex = 0
+          } else {
+            this.storage.currentIndex = Math.min(currentIndex, newResults.length - 1)
+          }
+
+          return true
+        },
+
+      replaceAll:
+        (replaceWith: string) =>
+        ({ tr }) => {
+          const { results } = this.storage
+          if (results.length === 0) return false
+
+          // Replace all in a single transaction (from last to first to preserve positions)
+          for (let i = results.length - 1; i >= 0; i--) {
+            tr.insertText(replaceWith, results[i].from, results[i].to)
+          }
+
           this.storage.searchTerm = ''
           this.storage.results = []
           this.storage.currentIndex = 0
 
-          editor.view.dispatch(editor.state.tr)
+          return true
+        },
+
+      clearSearch:
+        () =>
+        () => {
+          this.storage.searchTerm = ''
+          this.storage.results = []
+          this.storage.currentIndex = 0
 
           return true
         },
@@ -118,7 +157,16 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
             return DecorationSet.empty
           },
 
-          apply(_tr, _value, _oldState, newState) {
+          apply(tr, _value, _oldState, newState) {
+            if (options.liveUpdate && tr.docChanged && storage.searchTerm) {
+              storage.results = findMatches(newState.doc, storage.searchTerm)
+              if (storage.results.length === 0) {
+                storage.currentIndex = 0
+              } else if (storage.currentIndex >= storage.results.length) {
+                storage.currentIndex = storage.results.length - 1
+              }
+            }
+
             return createDecorations(
               newState,
               storage.results,

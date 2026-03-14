@@ -11,6 +11,8 @@ export interface UseScoutReturn {
   find: (searchTerm: string) => void
   findNext: () => void
   findPrevious: () => void
+  replace: (replaceWith: string) => void
+  replaceAll: (replaceWith: string) => void
   clearSearch: () => void
 }
 
@@ -50,6 +52,16 @@ export function useScout(editor: Editor | null): UseScoutReturn {
     [editor],
   )
 
+  const replace = useCallback(
+    (replaceWith: string) => editor?.commands.replace(replaceWith),
+    [editor],
+  )
+
+  const replaceAll = useCallback(
+    (replaceWith: string) => editor?.commands.replaceAll(replaceWith),
+    [editor],
+  )
+
   const clearSearch = useCallback(
     () => editor?.commands.clearSearch(),
     [editor],
@@ -62,6 +74,8 @@ export function useScout(editor: Editor | null): UseScoutReturn {
     find,
     findNext,
     findPrevious,
+    replace,
+    replaceAll,
     clearSearch,
   }
 }

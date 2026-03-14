@@ -12,9 +12,12 @@
 - Поиск корректно работает через inline-форматирование (жирный, курсив, ссылки и т.д.)
 - Подсветка совпадений через ProseMirror Decorations
 - `findNext` / `findPrevious` с циклической навигацией
+- `replace` / `replaceAll` с корректным undo/redo
 - Опциональный scroll к текущему совпадению
+- Live update — автоматический пересчёт поиска при изменении документа
 - Счётчик "N из M" через `editor.storage.scout`
 - Настраиваемые CSS-классы — стили не навязываются
+- React hook `useScout` для реактивного состояния
 - Полная типизация TypeScript с автокомплитом команд
 
 ## Установка
@@ -42,6 +45,8 @@ const editor = new Editor({
     Scout.configure({
       searchResultClass: 'search-highlight',
       currentResultClass: 'search-highlight-current',
+      scrollIntoView: true,
+      liveUpdate: true,
     }),
   ],
 })
@@ -52,6 +57,10 @@ editor.commands.find('привет')
 // Навигация между совпадениями
 editor.commands.findNext()
 editor.commands.findPrevious()
+
+// Замена
+editor.commands.replace('мир')
+editor.commands.replaceAll('мир')
 
 // Сброс поиска
 editor.commands.clearSearch()
@@ -75,6 +84,42 @@ console.log(`${currentIndex + 1} из ${results.length}`)
 }
 ```
 
+## React
+
+```tsx
+import { Scout } from '@shabalinmax/tiptap-scout'
+import { useScout } from '@shabalinmax/tiptap-scout/react'
+
+function SearchBar({ editor }) {
+  const {
+    results,
+    currentIndex,
+    totalCount,
+    find,
+    findNext,
+    findPrevious,
+    replace,
+    replaceAll,
+    clearSearch,
+  } = useScout(editor)
+
+  return (
+    <div>
+      <input onChange={(e) => find(e.target.value)} />
+      <span>{totalCount > 0 ? `${currentIndex + 1} из ${totalCount}` : 'Нет результатов'}</span>
+      <button onClick={findPrevious}>Назад</button>
+      <button onClick={findNext}>Далее</button>
+      <input id="replace" />
+      <button onClick={() => replace(document.getElementById('replace').value)}>Заменить</button>
+      <button onClick={() => replaceAll(document.getElementById('replace').value)}>Заменить все</button>
+      <button onClick={clearSearch}>Сбросить</button>
+    </div>
+  )
+}
+```
+
+React — опциональная peer-зависимость, не требуется для проектов без React.
+
 ## Опции
 
 | Опция | Тип | По умолчанию | Описание |
@@ -82,6 +127,7 @@ console.log(`${currentIndex + 1} из ${results.length}`)
 | `searchResultClass` | `string` | `'scout-result'` | CSS-класс для всех совпадений |
 | `currentResultClass` | `string` | `'scout-result-current'` | CSS-класс для текущего совпадения |
 | `scrollIntoView` | `boolean` | `false` | Прокрутка к текущему совпадению при навигации |
+| `liveUpdate` | `boolean` | `false` | Автоматический пересчёт поиска при изменении документа |
 
 ## Команды
 
@@ -90,6 +136,8 @@ console.log(`${currentIndex + 1} из ${results.length}`)
 | `find` | `searchTerm: string` | Поиск текста (без учёта регистра) |
 | `findNext` | — | Перейти к следующему совпадению (циклически) |
 | `findPrevious` | — | Перейти к предыдущему совпадению (циклически) |
+| `replace` | `replaceWith: string` | Заменить текущее совпадение |
+| `replaceAll` | `replaceWith: string` | Заменить все совпадения (один шаг undo) |
 | `clearSearch` | — | Сброс результатов и декораций |
 
 ## Storage (`editor.storage.scout`)
@@ -98,13 +146,14 @@ console.log(`${currentIndex + 1} из ${results.length}`)
 | --- | --- | --- |
 | `searchTerm` | `string` | Текущий поисковый запрос |
 | `results` | `SearchResult[]` | Массив позиций `{ from, to }` |
-| `currentIndex` | `number` | Индекс текущего совпадения |
+| `currentIndex` | `number` | Индекс текущего совпадения (с нуля) |
 
 ## Планы
 
-- Команды `replace` / `replaceAll`
 - Режимы поиска: с учётом регистра, целые слова, регулярные выражения
-- Автоматический пересчёт при изменении документа
+- Capture groups ($1, $2) в строке замены
+- Поиск/замена внутри выделения
+- Preserve case при замене (Foo→Bar, foo→bar, FOO→BAR)
 
 ## Лицензия
 
