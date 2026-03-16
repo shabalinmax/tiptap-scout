@@ -78,13 +78,13 @@ describe('replaceAll command', () => {
     expect(editor.state.doc.textContent).toBe('qux bar qux baz qux')
   })
 
-  it('clears results after replaceAll', () => {
+  it('clears results after replaceAll but keeps searchTerm', () => {
     editor = createEditor('<p>foo bar foo</p>')
     editor.commands.find('foo')
     editor.commands.replaceAll('baz')
 
     expect(editor.storage.scout.results).toHaveLength(0)
-    expect(editor.storage.scout.searchTerm).toBe('')
+    expect(editor.storage.scout.searchTerm).toBe('foo')
   })
 
   it('does nothing when no results', () => {

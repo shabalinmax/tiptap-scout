@@ -4,7 +4,7 @@ Search and replace extension for [Tiptap 3](https://tiptap.dev/).
 
 Existing alternatives are outdated and built for Tiptap 2. This package is designed for Tiptap 3 from the ground up.
 
-[README on Russian](./README.ru.md)
+[Live Demo](https://shabalinmax.github.io/tiptap-scout/) | [README on Russian](./README.ru.md)
 
 ## Features
 
@@ -87,12 +87,14 @@ The extension does not include any styles. Add your own:
 ## React
 
 ```tsx
+import { useState } from 'react'
 import { Scout } from '@shabalinmax/tiptap-scout'
 import { useScout } from '@shabalinmax/tiptap-scout/react'
 
 function SearchBar({ editor }) {
+  const [replaceValue, setReplaceValue] = useState('')
   const {
-    results,
+    searchTerm,
     currentIndex,
     totalCount,
     find,
@@ -105,13 +107,13 @@ function SearchBar({ editor }) {
 
   return (
     <div>
-      <input onChange={(e) => find(e.target.value)} />
+      <input value={searchTerm} onChange={(e) => find(e.target.value)} />
       <span>{totalCount > 0 ? `${currentIndex + 1} of ${totalCount}` : 'No results'}</span>
       <button onClick={findPrevious}>Prev</button>
       <button onClick={findNext}>Next</button>
-      <input id="replace" />
-      <button onClick={() => replace(document.getElementById('replace').value)}>Replace</button>
-      <button onClick={() => replaceAll(document.getElementById('replace').value)}>Replace All</button>
+      <input value={replaceValue} onChange={(e) => setReplaceValue(e.target.value)} />
+      <button onClick={() => replace(replaceValue)}>Replace</button>
+      <button onClick={() => replaceAll(replaceValue)}>Replace All</button>
       <button onClick={clearSearch}>Clear</button>
     </div>
   )

@@ -118,7 +118,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
       replaceAll:
         (replaceWith: string) =>
         ({ tr }) => {
-          const { results } = this.storage
+          const { results, searchTerm } = this.storage
           if (results.length === 0) return false
 
           // Replace all in a single transaction (from last to first to preserve positions)
@@ -126,8 +126,9 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
             tr.insertText(replaceWith, results[i].from, results[i].to)
           }
 
-          this.storage.searchTerm = ''
-          this.storage.results = []
+          // Re-search in the doc after applying replacements (keep searchTerm for undo support)
+          const newResults = findMatches(tr.doc, searchTerm)
+          this.storage.results = newResults
           this.storage.currentIndex = 0
 
           return true

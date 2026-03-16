@@ -4,7 +4,7 @@
 
 Существующие аналоги устарели и написаны под Tiptap 2. Этот пакет разработан для Tiptap 3 с нуля.
 
-[README in English](./README.md)
+[Live Demo](https://shabalinmax.github.io/tiptap-scout/) | [README in English](./README.md)
 
 ## Возможности
 
@@ -87,12 +87,14 @@ console.log(`${currentIndex + 1} из ${results.length}`)
 ## React
 
 ```tsx
+import { useState } from 'react'
 import { Scout } from '@shabalinmax/tiptap-scout'
 import { useScout } from '@shabalinmax/tiptap-scout/react'
 
 function SearchBar({ editor }) {
+  const [replaceValue, setReplaceValue] = useState('')
   const {
-    results,
+    searchTerm,
     currentIndex,
     totalCount,
     find,
@@ -105,13 +107,13 @@ function SearchBar({ editor }) {
 
   return (
     <div>
-      <input onChange={(e) => find(e.target.value)} />
+      <input value={searchTerm} onChange={(e) => find(e.target.value)} />
       <span>{totalCount > 0 ? `${currentIndex + 1} из ${totalCount}` : 'Нет результатов'}</span>
       <button onClick={findPrevious}>Назад</button>
       <button onClick={findNext}>Далее</button>
-      <input id="replace" />
-      <button onClick={() => replace(document.getElementById('replace').value)}>Заменить</button>
-      <button onClick={() => replaceAll(document.getElementById('replace').value)}>Заменить все</button>
+      <input value={replaceValue} onChange={(e) => setReplaceValue(e.target.value)} />
+      <button onClick={() => replace(replaceValue)}>Заменить</button>
+      <button onClick={() => replaceAll(replaceValue)}>Заменить все</button>
       <button onClick={clearSearch}>Сбросить</button>
     </div>
   )

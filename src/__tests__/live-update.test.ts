@@ -93,6 +93,41 @@ describe('liveUpdate: true', () => {
     expect(editor.storage.scout.results).toHaveLength(0)
   })
 
+  it('updates decorations after typing (simulated keystrokes)', () => {
+    editor = new Editor({
+      extensions: [
+        StarterKit,
+        Scout.configure({ liveUpdate: true }),
+      ],
+      content: '<p>foo bar</p>',
+    })
+
+    editor.commands.find('foo')
+    expect(editor.storage.scout.results).toHaveLength(1)
+
+    // Simulate typing "foo" at the end, character by character
+    const endPos = editor.state.doc.content.size - 1
+    editor.view.dispatch(editor.state.tr.insertText(' ', endPos))
+    editor.view.dispatch(editor.state.tr.insertText('f', endPos + 1))
+    editor.view.dispatch(editor.state.tr.insertText('o', endPos + 2))
+    editor.view.dispatch(editor.state.tr.insertText('o', endPos + 3))
+
+    expect(editor.storage.scout.results).toHaveLength(2)
+  })
+
+  it('verifies options.liveUpdate is accessible in plugin', () => {
+    editor = new Editor({
+      extensions: [
+        StarterKit,
+        Scout.configure({ liveUpdate: true }),
+      ],
+      content: '<p>test</p>',
+    })
+
+    const scoutExt = editor.extensionManager.extensions.find(e => e.name === 'scout')
+    expect(scoutExt?.options.liveUpdate).toBe(true)
+  })
+
   it('clamps currentIndex when matches decrease', () => {
     editor = new Editor({
       extensions: [

@@ -5,6 +5,7 @@ import type { SearchResult } from './types'
 import './scout'
 
 export interface UseScoutReturn {
+  searchTerm: string
   results: SearchResult[]
   currentIndex: number
   totalCount: number
@@ -17,6 +18,7 @@ export interface UseScoutReturn {
 }
 
 export function useScout(editor: Editor | null): UseScoutReturn {
+  const [searchTerm, setSearchTerm] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -27,6 +29,7 @@ export function useScout(editor: Editor | null): UseScoutReturn {
       const storage = editor.storage.scout
       if (!storage) return
 
+      setSearchTerm(storage.searchTerm)
       setResults(storage.results)
       setCurrentIndex(storage.currentIndex)
     }
@@ -68,6 +71,7 @@ export function useScout(editor: Editor | null): UseScoutReturn {
   )
 
   return {
+    searchTerm,
     results,
     currentIndex,
     totalCount: results.length,
