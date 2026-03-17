@@ -4,7 +4,7 @@ Search and replace extension for [Tiptap 3](https://tiptap.dev/).
 
 Existing alternatives are outdated and built for Tiptap 2. This package is designed for Tiptap 3 from the ground up.
 
-[Live Demo](https://shabalinmax.github.io/tiptap-scout/) | [README on Russian](./README.ru.md)
+[Live Demo](https://shabalinmax.github.io/tiptap-scout/) | [GitHub](https://github.com/shabalinmax/tiptap-scout) | [README on Russian](./README.ru.md)
 
 ## Features
 

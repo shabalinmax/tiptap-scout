@@ -49,6 +49,14 @@
     "typescript": "^5.7.0",
     "vitest": "^4.1.0"
   },
+  "homepage": "https://github.com/shabalinmax/tiptap-scout#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shabalinmax/tiptap-scout.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shabalinmax/tiptap-scout/issues"
+  },
   "keywords": [
     "tiptap",
     "search",
