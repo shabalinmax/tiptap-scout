@@ -8,7 +8,8 @@ Existing alternatives are outdated and built for Tiptap 2. This package is desig
 
 ## Features
 
-- Case-insensitive text search
+- Text search with optional case sensitivity
+- Preserve case on replace (e.g. "Hello" → "World", "hello" → "world")
 - Search works correctly across inline marks (bold, italic, links, etc.)
 - Match highlighting via ProseMirror Decorations
 - `findNext` / `findPrevious` with cyclic navigation
@@ -135,11 +136,13 @@ React is an optional peer dependency — it won't be required for non-React proj
 
 | Command | Parameters | Description |
 | --- | --- | --- |
-| `find` | `searchTerm: string` | Search for text (case-insensitive) |
+| `find` | `searchTerm: string` | Search for text |
 | `findNext` | — | Navigate to the next match (cyclic) |
 | `findPrevious` | — | Navigate to the previous match (cyclic) |
 | `replace` | `replaceWith: string` | Replace the current match |
 | `replaceAll` | `replaceWith: string` | Replace all matches (single undo step) |
+| `setCaseSensitive` | `value: boolean` | Toggle case-sensitive search |
+| `setPreserveCase` | `value: boolean` | Toggle preserve case on replace |
 | `clearSearch` | — | Clear search results and decorations |
 
 ## Storage (`editor.storage.scout`)
@@ -149,13 +152,14 @@ React is an optional peer dependency — it won't be required for non-React proj
 | `searchTerm` | `string` | Current search term |
 | `results` | `SearchResult[]` | Array of `{ from, to }` positions |
 | `currentIndex` | `number` | Index of the current match (zero-based) |
+| `caseSensitive` | `boolean` | Whether search is case-sensitive |
+| `preserveCase` | `boolean` | Whether replace preserves original case |
 
 ## Roadmap
 
-- Case-sensitive, whole word, and regex search modes
+- Whole word and regex search modes
 - Capture groups ($1, $2) in replacement string
 - Search/replace within selection
-- Preserve case on replace (Foo→Bar, foo→bar, FOO→BAR)
 
 ## License
 
