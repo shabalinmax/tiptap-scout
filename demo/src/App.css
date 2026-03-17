@@ -52,6 +52,19 @@ h1 {
   cursor: default;
 }
 
+.toggle-btn {
+  font-weight: 700;
+  min-width: 36px;
+  padding: 8px !important;
+  color: #999;
+}
+
+.toggle-btn.active {
+  background: #e0e0e0 !important;
+  color: #333;
+  border-color: #bbb;
+}
+
 .counter {
   font-size: 13px;
   color: #666;

@@ -8,12 +8,16 @@ export function SearchBar({ editor }: { editor: Editor | null }) {
     searchTerm,
     currentIndex,
     totalCount,
+    caseSensitive,
+    preserveCase,
     find,
     findNext,
     findPrevious,
     replace,
     replaceAll,
     clearSearch,
+    setCaseSensitive,
+    setPreserveCase,
   } = useScout(editor)
 
   return (
@@ -25,6 +29,13 @@ export function SearchBar({ editor }: { editor: Editor | null }) {
           value={searchTerm}
           onChange={(e) => find(e.target.value)}
         />
+        <button
+          className={`toggle-btn ${caseSensitive ? 'active' : ''}`}
+          onClick={() => setCaseSensitive(!caseSensitive)}
+          title="Match Case"
+        >
+          Aa
+        </button>
         <span className="counter">
           {totalCount > 0 ? `${currentIndex + 1} / ${totalCount}` : 'No results'}
         </span>
@@ -39,6 +50,13 @@ export function SearchBar({ editor }: { editor: Editor | null }) {
           value={replaceValue}
           onChange={(e) => setReplaceValue(e.target.value)}
         />
+        <button
+          className={`toggle-btn ${preserveCase ? 'active' : ''}`}
+          onClick={() => setPreserveCase(!preserveCase)}
+          title="Preserve Case"
+        >
+          AB
+        </button>
         <button onClick={() => replace(replaceValue)} disabled={totalCount === 0}>Replace</button>
         <button onClick={() => replaceAll(replaceValue)} disabled={totalCount === 0}>Replace All</button>
       </div>

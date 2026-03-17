@@ -9,18 +9,24 @@ export interface UseScoutReturn {
   results: SearchResult[]
   currentIndex: number
   totalCount: number
+  caseSensitive: boolean
+  preserveCase: boolean
   find: (searchTerm: string) => void
   findNext: () => void
   findPrevious: () => void
   replace: (replaceWith: string) => void
   replaceAll: (replaceWith: string) => void
   clearSearch: () => void
+  setCaseSensitive: (value: boolean) => void
+  setPreserveCase: (value: boolean) => void
 }
 
 export function useScout(editor: Editor | null): UseScoutReturn {
   const [searchTerm, setSearchTerm] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [caseSensitive, setCaseSensitiveState] = useState(false)
+  const [preserveCase, setPreserveCaseState] = useState(false)
 
   useEffect(() => {
     if (!editor) return
@@ -32,6 +38,8 @@ export function useScout(editor: Editor | null): UseScoutReturn {
       setSearchTerm(storage.searchTerm)
       setResults(storage.results)
       setCurrentIndex(storage.currentIndex)
+      setCaseSensitiveState(storage.caseSensitive)
+      setPreserveCaseState(storage.preserveCase)
     }
 
     editor.on('transaction', onTransaction)
@@ -70,16 +78,30 @@ export function useScout(editor: Editor | null): UseScoutReturn {
     [editor],
   )
 
+  const setCaseSensitive = useCallback(
+    (value: boolean) => editor?.commands.setCaseSensitive(value),
+    [editor],
+  )
+
+  const setPreserveCase = useCallback(
+    (value: boolean) => editor?.commands.setPreserveCase(value),
+    [editor],
+  )
+
   return {
     searchTerm,
     results,
     currentIndex,
     totalCount: results.length,
+    caseSensitive,
+    preserveCase,
     find,
     findNext,
     findPrevious,
     replace,
     replaceAll,
     clearSearch,
+    setCaseSensitive,
+    setPreserveCase,
   }
 }

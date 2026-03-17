@@ -5,6 +5,7 @@ import type { ScoutOptions, ScoutStorage } from './types'
 import { findMatches } from './search'
 import { createDecorations } from './decoration'
 import { scrollToResult } from './scroll'
+import { applyCase } from './preserveCase'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -15,6 +16,8 @@ declare module '@tiptap/core' {
       replace: (replaceWith: string) => ReturnType
       replaceAll: (replaceWith: string) => ReturnType
       clearSearch: () => ReturnType
+      setCaseSensitive: (value: boolean) => ReturnType
+      setPreserveCase: (value: boolean) => ReturnType
     }
   }
 
@@ -42,6 +45,8 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
       searchTerm: '',
       results: [],
       currentIndex: 0,
+      caseSensitive: false,
+      preserveCase: false,
     }
   },
 
@@ -51,7 +56,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
         (searchTerm: string) =>
         ({ editor, tr }) => {
           this.storage.searchTerm = searchTerm
-          this.storage.results = findMatches(editor.state.doc, searchTerm)
+          this.storage.results = findMatches(editor.state.doc, searchTerm, this.storage.caseSensitive)
           this.storage.currentIndex = 0
 
           if (this.options.scrollIntoView && this.storage.results.length > 0) {
@@ -94,15 +99,20 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
       replace:
         (replaceWith: string) =>
         ({ editor, tr }) => {
-          const { results, currentIndex, searchTerm } = this.storage
+          const { results, currentIndex, searchTerm, caseSensitive, preserveCase } = this.storage
           if (results.length === 0) return false
 
           const { from, to } = results[currentIndex]
-          tr.insertText(replaceWith, from, to)
+          let text = replaceWith
+          if (preserveCase) {
+            const original = editor.state.doc.textBetween(from, to)
+            text = applyCase(original, replaceWith)
+          }
+          tr.insertText(text, from, to)
 
           // Re-search in the doc after applying the replacement
           const newDoc = tr.doc
-          const newResults = findMatches(newDoc, searchTerm)
+          const newResults = findMatches(newDoc, searchTerm, caseSensitive)
           this.storage.results = newResults
 
           if (newResults.length === 0) {
@@ -117,20 +127,43 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
 
       replaceAll:
         (replaceWith: string) =>
-        ({ tr }) => {
-          const { results, searchTerm } = this.storage
+        ({ editor, tr }) => {
+          const { results, searchTerm, caseSensitive, preserveCase } = this.storage
           if (results.length === 0) return false
 
           // Replace all in a single transaction (from last to first to preserve positions)
           for (let i = results.length - 1; i >= 0; i--) {
-            tr.insertText(replaceWith, results[i].from, results[i].to)
+            let text = replaceWith
+            if (preserveCase) {
+              const original = editor.state.doc.textBetween(results[i].from, results[i].to)
+              text = applyCase(original, replaceWith)
+            }
+            tr.insertText(text, results[i].from, results[i].to)
           }
 
           // Re-search in the doc after applying replacements (keep searchTerm for undo support)
-          const newResults = findMatches(tr.doc, searchTerm)
+          const newResults = findMatches(tr.doc, searchTerm, caseSensitive)
           this.storage.results = newResults
           this.storage.currentIndex = 0
 
+          return true
+        },
+
+      setCaseSensitive:
+        (value: boolean) =>
+        ({ editor }) => {
+          this.storage.caseSensitive = value
+          if (this.storage.searchTerm) {
+            this.storage.results = findMatches(editor.state.doc, this.storage.searchTerm, value)
+            this.storage.currentIndex = 0
+          }
+          return true
+        },
+
+      setPreserveCase:
+        (value: boolean) =>
+        () => {
+          this.storage.preserveCase = value
           return true
         },
 
@@ -160,7 +193,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
 
           apply(tr, _value, _oldState, newState) {
             if (options.liveUpdate && tr.docChanged && storage.searchTerm) {
-              storage.results = findMatches(newState.doc, storage.searchTerm)
+              storage.results = findMatches(newState.doc, storage.searchTerm, storage.caseSensitive)
               if (storage.results.length === 0) {
                 storage.currentIndex = 0
               } else if (storage.currentIndex >= storage.results.length) {

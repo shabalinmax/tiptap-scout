@@ -1,11 +1,11 @@
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
 import type { SearchResult } from './types'
 
-export function findMatches(doc: ProseMirrorNode, searchTerm: string): SearchResult[] {
+export function findMatches(doc: ProseMirrorNode, searchTerm: string, caseSensitive = false): SearchResult[] {
   if (!searchTerm) return []
 
   const results: SearchResult[] = []
-  const term = searchTerm.toLowerCase()
+  const term = caseSensitive ? searchTerm : searchTerm.toLowerCase()
 
   doc.descendants((node, pos) => {
     if (!node.isBlock) return
@@ -26,15 +26,15 @@ export function findMatches(doc: ProseMirrorNode, searchTerm: string): SearchRes
       }
     })
 
-    const lowerText = fullText.toLowerCase()
-    let index = lowerText.indexOf(term)
+    const textToSearch = caseSensitive ? fullText : fullText.toLowerCase()
+    let index = textToSearch.indexOf(term)
 
     while (index !== -1) {
       results.push({
         from: offsets[index],
         to: offsets[index + term.length - 1] + 1,
       })
-      index = lowerText.indexOf(term, index + 1)
+      index = textToSearch.indexOf(term, index + 1)
     }
   })
 

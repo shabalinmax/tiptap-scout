@@ -9,6 +9,8 @@ export interface ScoutStorage {
   searchTerm: string
   results: SearchResult[]
   currentIndex: number
+  caseSensitive: boolean
+  preserveCase: boolean
 }
 
 export interface SearchResult {
