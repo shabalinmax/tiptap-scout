@@ -16,7 +16,9 @@ declare module '@tiptap/core' {
       replace: (replaceWith: string) => ReturnType
       replaceAll: (replaceWith: string) => ReturnType
       clearSearch: () => ReturnType
+      resetSearch: () => ReturnType
       setCaseSensitive: (value: boolean) => ReturnType
+      setWholeWord: (value: boolean) => ReturnType
       setPreserveCase: (value: boolean) => ReturnType
     }
   }
@@ -46,6 +48,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
       results: [],
       currentIndex: 0,
       caseSensitive: false,
+      wholeWord: false,
       preserveCase: false,
     }
   },
@@ -56,7 +59,12 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
         (searchTerm: string) =>
         ({ editor, tr }) => {
           this.storage.searchTerm = searchTerm
-          this.storage.results = findMatches(editor.state.doc, searchTerm, this.storage.caseSensitive)
+          this.storage.results = findMatches({
+            doc: editor.state.doc,
+            searchTerm,
+            caseSensitive: this.storage.caseSensitive,
+            wholeWord: this.storage.wholeWord,
+          })
           this.storage.currentIndex = 0
 
           if (this.options.scrollIntoView && this.storage.results.length > 0) {
@@ -99,7 +107,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
       replace:
         (replaceWith: string) =>
         ({ editor, tr }) => {
-          const { results, currentIndex, searchTerm, caseSensitive, preserveCase } = this.storage
+          const { results, currentIndex, searchTerm, caseSensitive, wholeWord, preserveCase } = this.storage
           if (results.length === 0) return false
 
           const { from, to } = results[currentIndex]
@@ -112,7 +120,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
 
           // Re-search in the doc after applying the replacement
           const newDoc = tr.doc
-          const newResults = findMatches(newDoc, searchTerm, caseSensitive)
+          const newResults = findMatches({ doc: newDoc, searchTerm, caseSensitive, wholeWord })
           this.storage.results = newResults
 
           if (newResults.length === 0) {
@@ -128,7 +136,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
       replaceAll:
         (replaceWith: string) =>
         ({ editor, tr }) => {
-          const { results, searchTerm, caseSensitive, preserveCase } = this.storage
+          const { results, searchTerm, caseSensitive, wholeWord, preserveCase } = this.storage
           if (results.length === 0) return false
 
           // Replace all in a single transaction (from last to first to preserve positions)
@@ -142,7 +150,7 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
           }
 
           // Re-search in the doc after applying replacements (keep searchTerm for undo support)
-          const newResults = findMatches(tr.doc, searchTerm, caseSensitive)
+          const newResults = findMatches({ doc: tr.doc, searchTerm, caseSensitive, wholeWord })
           this.storage.results = newResults
           this.storage.currentIndex = 0
 
@@ -154,7 +162,28 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
         ({ editor }) => {
           this.storage.caseSensitive = value
           if (this.storage.searchTerm) {
-            this.storage.results = findMatches(editor.state.doc, this.storage.searchTerm, value)
+            this.storage.results = findMatches({
+              doc: editor.state.doc,
+              searchTerm: this.storage.searchTerm,
+              caseSensitive: value,
+              wholeWord: this.storage.wholeWord,
+            })
+            this.storage.currentIndex = 0
+          }
+          return true
+        },
+
+      setWholeWord:
+        (value: boolean) =>
+        ({ editor }) => {
+          this.storage.wholeWord = value
+          if (this.storage.searchTerm) {
+            this.storage.results = findMatches({
+              doc: editor.state.doc,
+              searchTerm: this.storage.searchTerm,
+              caseSensitive: this.storage.caseSensitive,
+              wholeWord: value,
+            })
             this.storage.currentIndex = 0
           }
           return true
@@ -176,6 +205,18 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
 
           return true
         },
+
+      // Unlike clearSearch (which keeps the search flags for the next query),
+      // this also drops the flags — for closing the search UI
+      resetSearch:
+        () =>
+        ({ commands }) => {
+          this.storage.caseSensitive = false
+          this.storage.wholeWord = false
+          this.storage.preserveCase = false
+
+          return commands.clearSearch()
+        },
     }
   },
 
@@ -193,7 +234,12 @@ export const Scout = Extension.create<ScoutOptions, ScoutStorage>({
 
           apply(tr, _value, _oldState, newState) {
             if (options.liveUpdate && tr.docChanged && storage.searchTerm) {
-              storage.results = findMatches(newState.doc, storage.searchTerm, storage.caseSensitive)
+              storage.results = findMatches({
+                doc: newState.doc,
+                searchTerm: storage.searchTerm,
+                caseSensitive: storage.caseSensitive,
+                wholeWord: storage.wholeWord,
+              })
               if (storage.results.length === 0) {
                 storage.currentIndex = 0
               } else if (storage.currentIndex >= storage.results.length) {

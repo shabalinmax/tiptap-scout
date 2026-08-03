@@ -103,6 +103,14 @@ describe('replaceAll command', () => {
     expect(editor.state.doc.textContent).toBe('qux barbaz qux')
   })
 
+  it('preserves hard breaks between matches', () => {
+    editor = createEditor('<p>кот<br>кот</p>')
+    editor.commands.find('кот')
+    editor.commands.replaceAll('пёс')
+
+    expect(editor.getHTML()).toBe('<p>пёс<br>пёс</p>')
+  })
+
   it('is undoable in one step', () => {
     editor = createEditor('<p>foo bar foo baz foo</p>')
     editor.commands.find('foo')

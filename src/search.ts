@@ -1,7 +1,13 @@
-import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
-import type { SearchResult } from './types'
+import type { SearchParams, SearchResult } from './types'
 
-export function findMatches(doc: ProseMirrorNode, searchTerm: string, caseSensitive = false): SearchResult[] {
+const isWordChar = (ch: string | undefined) => Boolean(ch) && /[\p{L}\p{N}_]/u.test(ch!)
+
+export function findMatches({
+  doc,
+  searchTerm,
+  caseSensitive = false,
+  wholeWord = false,
+}: SearchParams): SearchResult[] {
   if (!searchTerm) return []
 
   const results: SearchResult[] = []
@@ -23,17 +29,25 @@ export function findMatches(doc: ProseMirrorNode, searchTerm: string, caseSensit
           offsets.push(pos + 1 + childPos + i)
         }
         fullText += child.text
+        return
       }
+      // Non-text inline node (hardBreak, image, etc.): without a placeholder the text
+      // on both sides would be glued together — a match would span the node and
+      // replace would silently delete it. U+FFFC can't occur in a search term.
+      offsets.push(pos + 1 + childPos)
+      fullText += '\uFFFC'
     })
 
     const textToSearch = caseSensitive ? fullText : fullText.toLowerCase()
     let index = textToSearch.indexOf(term)
 
     while (index !== -1) {
-      results.push({
-        from: offsets[index],
-        to: offsets[index + term.length - 1] + 1,
-      })
+      if (!wholeWord || (!isWordChar(fullText[index - 1]) && !isWordChar(fullText[index + term.length]))) {
+        results.push({
+          from: offsets[index],
+          to: offsets[index + term.length - 1] + 1,
+        })
+      }
       index = textToSearch.indexOf(term, index + 1)
     }
   })

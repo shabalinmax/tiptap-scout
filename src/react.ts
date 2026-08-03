@@ -10,6 +10,7 @@ export interface UseScoutReturn {
   currentIndex: number
   totalCount: number
   caseSensitive: boolean
+  wholeWord: boolean
   preserveCase: boolean
   find: (searchTerm: string) => void
   findNext: () => void
@@ -17,16 +18,23 @@ export interface UseScoutReturn {
   replace: (replaceWith: string) => void
   replaceAll: (replaceWith: string) => void
   clearSearch: () => void
+  resetSearch: () => void
   setCaseSensitive: (value: boolean) => void
+  setWholeWord: (value: boolean) => void
   setPreserveCase: (value: boolean) => void
 }
 
 export function useScout(editor: Editor | null): UseScoutReturn {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [caseSensitive, setCaseSensitiveState] = useState(false)
-  const [preserveCase, setPreserveCaseState] = useState(false)
+  // Seed from storage: the consumer may unmount the search UI without resetting
+  // the search state, and on remount local literals would disagree with the
+  // actual search behavior
+  const scoutStorage = editor?.storage.scout
+  const [searchTerm, setSearchTerm] = useState(scoutStorage?.searchTerm ?? '')
+  const [results, setResults] = useState<SearchResult[]>(scoutStorage?.results ?? [])
+  const [currentIndex, setCurrentIndex] = useState(scoutStorage?.currentIndex ?? 0)
+  const [caseSensitive, setCaseSensitiveState] = useState(scoutStorage?.caseSensitive ?? false)
+  const [wholeWord, setWholeWordState] = useState(scoutStorage?.wholeWord ?? false)
+  const [preserveCase, setPreserveCaseState] = useState(scoutStorage?.preserveCase ?? false)
 
   useEffect(() => {
     if (!editor) return
@@ -39,6 +47,7 @@ export function useScout(editor: Editor | null): UseScoutReturn {
       setResults(storage.results)
       setCurrentIndex(storage.currentIndex)
       setCaseSensitiveState(storage.caseSensitive)
+      setWholeWordState(storage.wholeWord)
       setPreserveCaseState(storage.preserveCase)
     }
 
@@ -78,8 +87,18 @@ export function useScout(editor: Editor | null): UseScoutReturn {
     [editor],
   )
 
+  const resetSearch = useCallback(
+    () => editor?.commands.resetSearch(),
+    [editor],
+  )
+
   const setCaseSensitive = useCallback(
     (value: boolean) => editor?.commands.setCaseSensitive(value),
+    [editor],
+  )
+
+  const setWholeWord = useCallback(
+    (value: boolean) => editor?.commands.setWholeWord(value),
     [editor],
   )
 
@@ -94,6 +113,7 @@ export function useScout(editor: Editor | null): UseScoutReturn {
     currentIndex,
     totalCount: results.length,
     caseSensitive,
+    wholeWord,
     preserveCase,
     find,
     findNext,
@@ -101,7 +121,9 @@ export function useScout(editor: Editor | null): UseScoutReturn {
     replace,
     replaceAll,
     clearSearch,
+    resetSearch,
     setCaseSensitive,
+    setWholeWord,
     setPreserveCase,
   }
 }

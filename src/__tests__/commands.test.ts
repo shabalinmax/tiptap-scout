@@ -39,6 +39,36 @@ describe('clearSearch command', () => {
     expect(editor.storage.scout.results).toHaveLength(0)
     expect(editor.storage.scout.currentIndex).toBe(0)
   })
+
+  it('keeps search flags', () => {
+    editor = createEditor('<p>foo bar foo</p>')
+    editor.commands.setCaseSensitive(true)
+    editor.commands.setWholeWord(true)
+    editor.commands.setPreserveCase(true)
+    editor.commands.clearSearch()
+
+    expect(editor.storage.scout.caseSensitive).toBe(true)
+    expect(editor.storage.scout.wholeWord).toBe(true)
+    expect(editor.storage.scout.preserveCase).toBe(true)
+  })
+})
+
+describe('resetSearch command', () => {
+  it('clears storage and drops search flags', () => {
+    editor = createEditor('<p>foo bar foo</p>')
+    editor.commands.setCaseSensitive(true)
+    editor.commands.setWholeWord(true)
+    editor.commands.setPreserveCase(true)
+    editor.commands.find('foo')
+    editor.commands.resetSearch()
+
+    expect(editor.storage.scout.searchTerm).toBe('')
+    expect(editor.storage.scout.results).toHaveLength(0)
+    expect(editor.storage.scout.currentIndex).toBe(0)
+    expect(editor.storage.scout.caseSensitive).toBe(false)
+    expect(editor.storage.scout.wholeWord).toBe(false)
+    expect(editor.storage.scout.preserveCase).toBe(false)
+  })
 })
 
 describe('findNext command', () => {

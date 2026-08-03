@@ -9,8 +9,10 @@
 ## Возможности
 
 - Поиск текста с опциональным учётом регистра
+- Режим поиска целых слов
 - Сохранение регистра при замене (например, «Привет» → «Мир», «привет» → «мир»)
 - Поиск корректно работает через inline-форматирование (жирный, курсив, ссылки и т.д.)
+- Совпадение не может пройти сквозь перенос строки, картинку и другие inline-ноды — замена не удалит их молча
 - Подсветка совпадений через ProseMirror Decorations
 - `findNext` / `findPrevious` с циклической навигацией
 - `replace` / `replaceAll` с корректным undo/redo
@@ -63,8 +65,14 @@ editor.commands.findPrevious()
 editor.commands.replace('мир')
 editor.commands.replaceAll('мир')
 
-// Сброс поиска
+// Опции поиска
+editor.commands.setCaseSensitive(true)
+editor.commands.setWholeWord(true)
+
+// Очистить запрос, сохранив опции…
 editor.commands.clearSearch()
+// …или сбросить всё к дефолтам (например, при закрытии панели поиска)
+editor.commands.resetSearch()
 
 // Доступ к состоянию (например, для отображения "2 из 5")
 const { searchTerm, results, currentIndex } = editor.storage.scout
@@ -142,8 +150,10 @@ React — опциональная peer-зависимость, не требу�
 | `replace` | `replaceWith: string` | Заменить текущее совпадение |
 | `replaceAll` | `replaceWith: string` | Заменить все совпадения (один шаг undo) |
 | `setCaseSensitive` | `value: boolean` | Включить/выключить учёт регистра при поиске |
+| `setWholeWord` | `value: boolean` | Включить/выключить поиск целых слов |
 | `setPreserveCase` | `value: boolean` | Включить/выключить сохранение регистра при замене |
-| `clearSearch` | — | Сброс результатов и декораций |
+| `clearSearch` | — | Сброс результатов и декораций (опции поиска сохраняются) |
+| `resetSearch` | — | Сброс поиска и всех опций к дефолтам |
 
 ## Storage (`editor.storage.scout`)
 
@@ -153,11 +163,12 @@ React — опциональная peer-зависимость, не требу�
 | `results` | `SearchResult[]` | Массив позиций `{ from, to }` |
 | `currentIndex` | `number` | Индекс текущего совпадения (с нуля) |
 | `caseSensitive` | `boolean` | Учитывать ли регистр при поиске |
+| `wholeWord` | `boolean` | Искать ли только целые слова |
 | `preserveCase` | `boolean` | Сохранять ли регистр при замене |
 
 ## Планы
 
-- Режимы поиска: целые слова, регулярные выражения
+- Режим поиска по регулярным выражениям
 - Capture groups ($1, $2) в строке замены
 - Поиск/замена внутри выделения
 

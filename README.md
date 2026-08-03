@@ -9,8 +9,10 @@ Existing alternatives are outdated and built for Tiptap 2. This package is desig
 ## Features
 
 - Text search with optional case sensitivity
+- Whole word search mode
 - Preserve case on replace (e.g. "Hello" → "World", "hello" → "world")
 - Search works correctly across inline marks (bold, italic, links, etc.)
+- Matches never span hard breaks, images and other inline nodes — replace can't silently delete them
 - Match highlighting via ProseMirror Decorations
 - `findNext` / `findPrevious` with cyclic navigation
 - `replace` / `replaceAll` with proper undo/redo support
@@ -63,8 +65,14 @@ editor.commands.findPrevious()
 editor.commands.replace('world')
 editor.commands.replaceAll('world')
 
-// Clear search
+// Search options
+editor.commands.setCaseSensitive(true)
+editor.commands.setWholeWord(true)
+
+// Clear the query but keep the options…
 editor.commands.clearSearch()
+// …or reset everything to defaults (e.g. when closing the search UI)
+editor.commands.resetSearch()
 
 // Access state (e.g. to display "2 of 5")
 const { searchTerm, results, currentIndex } = editor.storage.scout
@@ -142,8 +150,10 @@ React is an optional peer dependency — it won't be required for non-React proj
 | `replace` | `replaceWith: string` | Replace the current match |
 | `replaceAll` | `replaceWith: string` | Replace all matches (single undo step) |
 | `setCaseSensitive` | `value: boolean` | Toggle case-sensitive search |
+| `setWholeWord` | `value: boolean` | Toggle whole word search |
 | `setPreserveCase` | `value: boolean` | Toggle preserve case on replace |
-| `clearSearch` | — | Clear search results and decorations |
+| `clearSearch` | — | Clear search results and decorations (keeps the search flags) |
+| `resetSearch` | — | Clear search and reset all search flags to defaults |
 
 ## Storage (`editor.storage.scout`)
 
@@ -153,11 +163,12 @@ React is an optional peer dependency — it won't be required for non-React proj
 | `results` | `SearchResult[]` | Array of `{ from, to }` positions |
 | `currentIndex` | `number` | Index of the current match (zero-based) |
 | `caseSensitive` | `boolean` | Whether search is case-sensitive |
+| `wholeWord` | `boolean` | Whether search matches whole words only |
 | `preserveCase` | `boolean` | Whether replace preserves original case |
 
 ## Roadmap
 
-- Whole word and regex search modes
+- Regex search mode
 - Capture groups ($1, $2) in replacement string
 - Search/replace within selection
 

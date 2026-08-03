@@ -9,6 +9,7 @@ export function SearchBar({ editor }: { editor: Editor | null }) {
     currentIndex,
     totalCount,
     caseSensitive,
+    wholeWord,
     preserveCase,
     find,
     findNext,
@@ -17,6 +18,7 @@ export function SearchBar({ editor }: { editor: Editor | null }) {
     replaceAll,
     clearSearch,
     setCaseSensitive,
+    setWholeWord,
     setPreserveCase,
   } = useScout(editor)
 
@@ -35,6 +37,13 @@ export function SearchBar({ editor }: { editor: Editor | null }) {
           title="Match Case"
         >
           Aa
+        </button>
+        <button
+          className={`toggle-btn ${wholeWord ? 'active' : ''}`}
+          onClick={() => setWholeWord(!wholeWord)}
+          title="Whole Word"
+        >
+          W
         </button>
         <span className="counter">
           {totalCount > 0 ? `${currentIndex + 1} / ${totalCount}` : 'No results'}
